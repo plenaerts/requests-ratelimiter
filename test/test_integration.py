@@ -71,12 +71,16 @@ def rate_limit_servers():
 
 
 @pytest.mark.integration
-def test_ratelimit__respects_limit(rate_limit_server):
+def test_ratelimit__respects_limit(rate_limit_server, monkeypatch):
     """Client should self-throttle so that all requests succeed (no 429s received).
 
     With per_second=1 and burst=1, the client waits ~1 second between requests,
     so 3 sequential requests should take at least 2 seconds total.
     """
+    monkeypatch.delenv('HTTP_PROXY', raising=False)
+    monkeypatch.delenv('HTTPS_PROXY', raising=False)
+    monkeypatch.delenv('http_proxy', raising=False)
+    monkeypatch.delenv('https_proxy', raising=False)
     session = LimiterSession(per_second=1, burst=1)
 
     start = time.monotonic()
@@ -88,8 +92,12 @@ def test_ratelimit__respects_limit(rate_limit_server):
 
 
 @pytest.mark.integration
-def test_ratelimit__server_returns_429(rate_limit_server):
+def test_ratelimit__server_returns_429(rate_limit_server, monkeypatch):
     """When the client bypasses rate-limiting, the server should return 429 responses"""
+    monkeypatch.delenv('HTTP_PROXY', raising=False)
+    monkeypatch.delenv('HTTPS_PROXY', raising=False)
+    monkeypatch.delenv('http_proxy', raising=False)
+    monkeypatch.delenv('https_proxy', raising=False)
     session = LimiterSession(per_second=1000, burst=1000, limit_statuses=[])
     statuses = [session.get(rate_limit_server).status_code for _ in range(3)]
 
@@ -98,8 +106,12 @@ def test_ratelimit__server_returns_429(rate_limit_server):
 
 
 @pytest.mark.integration
-def test_ratelimit__fill_bucket_on_429(rate_limit_server):
+def test_ratelimit__fill_bucket_on_429(rate_limit_server, monkeypatch):
     """A 429 response should trigger bucket-filling, delaying the next request"""
+    monkeypatch.delenv('HTTP_PROXY', raising=False)
+    monkeypatch.delenv('HTTPS_PROXY', raising=False)
+    monkeypatch.delenv('http_proxy', raising=False)
+    monkeypatch.delenv('https_proxy', raising=False)
     session = LimiterSession(per_second=5, burst=5)
     start = time.monotonic()
     statuses = [session.get(rate_limit_server).status_code for _ in range(3)]
@@ -111,9 +123,13 @@ def test_ratelimit__fill_bucket_on_429(rate_limit_server):
 
 
 @pytest.mark.integration
-def test_ratelimit__per_host_isolation(rate_limit_servers):
+def test_ratelimit__per_host_isolation(rate_limit_servers, monkeypatch):
     """With per_host=True (default), each host has its own bucket"""
     url1, url2 = rate_limit_servers
+    monkeypatch.delenv('HTTP_PROXY', raising=False)
+    monkeypatch.delenv('HTTPS_PROXY', raising=False)
+    monkeypatch.delenv('http_proxy', raising=False)
+    monkeypatch.delenv('https_proxy', raising=False)
     session = LimiterSession(per_second=1, burst=1, per_host=True)
 
     # Alternate between the two hosts; neither bucket should fill up
@@ -129,8 +145,12 @@ def test_ratelimit__per_host_isolation(rate_limit_servers):
 
 
 @pytest.mark.integration
-def test_ratelimit__per_host_disabled(rate_limit_servers):
+def test_ratelimit__per_host_disabled(rate_limit_servers, monkeypatch):
     """With per_host=False, all hosts share a single bucket"""
+    monkeypatch.delenv('HTTP_PROXY', raising=False)
+    monkeypatch.delenv('HTTPS_PROXY', raising=False)
+    monkeypatch.delenv('http_proxy', raising=False)
+    monkeypatch.delenv('https_proxy', raising=False)
     url1, url2 = rate_limit_servers
     session = LimiterSession(per_second=1, burst=1, per_host=False)
 
